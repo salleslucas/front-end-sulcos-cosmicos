@@ -176,6 +176,52 @@ Acesse em: **http://localhost:3000**
 
 ---
 
+## API Externa: iTunes Search API
+
+O catálogo de álbuns da loja é fornecido pela **iTunes Search API**, uma API pública disponibilizada pela Apple.
+
+| Item | Detalhe |
+|---|---|
+| Provedor | Apple Inc. |
+| Licença | Uso gratuito conforme os [Termos de Serviço da Apple](https://www.apple.com/legal/internet-services/itunes/br/terms.html) |
+| Cadastro | Não é necessário |
+| Autenticação | Não é necessária |
+| Documentação oficial | https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/ |
+
+### Rotas utilizadas
+
+**`GET https://itunes.apple.com/search`**
+
+Busca álbuns por termo (nome do artista). Utilizada para compor o catálogo da loja.
+
+Parâmetros enviados:
+- `term` — nome do artista (ex: `Pink Floyd`)
+- `media=music` — restringe a conteúdo musical
+- `entity=album` — retorna apenas álbuns completos
+- `limit` — número máximo de resultados por consulta
+
+Exemplo:
+```
+GET https://itunes.apple.com/search?term=Pink+Floyd&media=music&entity=album&limit=4
+```
+
+**`GET https://itunes.apple.com/lookup`**
+
+Busca um álbum específico pelo seu identificador único (`collectionId`). Utilizada na página de detalhe do disco.
+
+Parâmetros enviados:
+- `id` — `collectionId` do álbum
+- `entity=album`
+
+Exemplo:
+```
+GET https://itunes.apple.com/lookup?id=1065973975&entity=album
+```
+
+Os dados retornados pela API são transformados pelo módulo `src/utils/transform.js` antes de serem exibidos na interface, sem nenhum redirecionamento para serviços externos.
+
+---
+
 ## Integração com a API externa (iTunes Search API)
 
 O arquivo `src/services/storeApi.js` centraliza todas as chamadas à iTunes Search API. Os termos de busca são predefinidos com artistas como Pink Floyd, David Bowie e Miles Davis, e as consultas são feitas em paralelo via `Promise.all`. Os resultados são deduplicados por `collectionId` antes de compor o catálogo final da loja.
