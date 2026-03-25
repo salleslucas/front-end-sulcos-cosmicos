@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchOrders, changeOrderStatus, removeOrder } from '../services/ordersService';
+import { useOrders } from '../hooks/useOrders';
 import VinylDisc from '../components/VinylDisc';
+import Feedback from '../components/Feedback';
 import toast from 'react-hot-toast';
 
 // Apenas os status suportados pela API FastAPI
@@ -14,62 +15,35 @@ const STATUS_LABELS = {
 const STATUS_FLOW = ['pending', 'shipped', 'delivered'];
 
 export default function OrderHistory() {
-  const [orders, setOrders]     = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
   const [expanded, setExpanded] = useState(null);
-  const [updatingId, setUpdatingId] = useState(null); // id em loading de PUT
-  const [deletingId, setDeletingId] = useState(null); // id em loading de DELETE
 
-  // GET /orders — busca do back-end real
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await fetchOrders();
-      setOrders(data);
-    } catch (err) {
-      setError(err.message || 'Não foi possível carregar os pedidos.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Hook reutilizável — encapsula estado e chamadas ao back-end FastAPI
+  const {
+    orders,
+    error,
+    success,
+    isListLoading,
+    isUpdating,
+    isDeleting,
+    loadOrders,
+    handleUpdateOrder,
+    handleDeleteOrder,
+  } = useOrders();
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
+  // Alias semântico para a página
+  const loading    = isListLoading;
 
-  // PUT /orders/{id} — atualizar status
+  // PUT /orders/{id} — atualizar status com toast
   const handleStatusUpdate = async (id, status) => {
-    setUpdatingId(id);
-    try {
-      await changeOrderStatus(id, status);
-      // Atualiza localmente sem refetch completo
-      setOrders(prev =>
-        prev.map(o => o.id === id ? { ...o, status } : o)
-      );
-      toast.success(`Status → "${STATUS_LABELS[status]?.label}"`, { icon: '✅' });
-    } catch (err) {
-      toast.error(err.message || 'Falha ao atualizar status');
-    } finally {
-      setUpdatingId(null);
-    }
+    await handleUpdateOrder(id, status);
+    toast.success(`Status → "${STATUS_LABELS[status]?.label}"`, { icon: '✅' });
   };
 
-  // DELETE /orders/{id} — remover pedido
+  // DELETE /orders/{id} — remover com toast e colapso do accordion
   const handleDelete = async (id) => {
-    setDeletingId(id);
-    try {
-      await removeOrder(id);
-      // Pequeno delay para a animação de saída
-      setTimeout(() => {
-        setOrders(prev => prev.filter(o => o.id !== id));
-        if (expanded === id) setExpanded(null);
-        setDeletingId(null);
-        toast.success('Pedido removido', { icon: '🗑️' });
-      }, 350);
-    } catch (err) {
-      setDeletingId(null);
-      toast.error(err.message || 'Falha ao excluir pedido');
-    }
+    await handleDeleteOrder(id);
+    if (expanded === id) setExpanded(null);
+    toast.success('Pedido removido', { icon: '🗑️' });
   };
 
   const formatDate = (iso) => {
@@ -103,7 +77,10 @@ export default function OrderHistory() {
         </button>
       </div>
 
-      {/* Erro de conexão */}
+      {/* Feedback inline de erro / sucesso */}
+      <Feedback error={error} success={success} className="mb-6" />
+
+      {/* Botão "Tentar novamente" quando há erro de carregamento */}
       {error && (
         <div className="glass-card p-5 mb-6 flex items-start gap-3 border-red-500/20">
           <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,10 +132,10 @@ export default function OrderHistory() {
         <div className="space-y-4">
           <AnimatePresence>
             {orders.map(order => {
-              const statusInfo = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
+              const statusInfo  = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
               const currentStep = STATUS_FLOW.indexOf(order.status);
-              const isUpdating = updatingId === order.id;
-              const isDeleting = deletingId === order.id;
+              const orderUpdating = isUpdating(order.id);
+              const orderDeleting = isDeleting(order.id);
 
               return (
                 <motion.div
@@ -166,9 +143,9 @@ export default function OrderHistory() {
                   layout
                   initial={{ opacity: 0, y: 10 }}
                   animate={{
-                    opacity: isDeleting ? 0 : 1,
+                    opacity: orderDeleting ? 0 : 1,
                     y: 0,
-                    scale: isDeleting ? 0.97 : 1,
+                    scale: orderDeleting ? 0.97 : 1,
                   }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
@@ -289,7 +266,7 @@ export default function OrderHistory() {
                           {/* Ações — PUT e DELETE */}
                           <div className="flex flex-wrap gap-2 border-t border-white/5 pt-4">
                             <span className="text-cosmic-muted text-xs self-center mr-1">
-                              {isUpdating ? 'Atualizando...' : 'Atualizar status:'}
+                              {orderUpdating ? 'Atualizando...' : 'Atualizar status:'}
                             </span>
 
                             {/* Botões PUT — apenas status diferentes do atual */}
@@ -299,7 +276,7 @@ export default function OrderHistory() {
                                 <button
                                   key={s}
                                   onClick={() => handleStatusUpdate(order.id, s)}
-                                  disabled={isUpdating}
+                                  disabled={orderUpdating}
                                   className={`text-xs border px-3 py-1.5 rounded-full transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed ${info.color}`}
                                 >
                                   {info.label}
@@ -310,10 +287,10 @@ export default function OrderHistory() {
                             {/* Botão DELETE */}
                             <button
                               onClick={() => handleDelete(order.id)}
-                              disabled={isDeleting || isUpdating}
+                              disabled={orderDeleting || orderUpdating}
                               className="ml-auto text-xs border border-red-400/30 text-red-400 bg-red-400/5 hover:bg-red-400/15 px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                              {isDeleting ? (
+                              {orderDeleting ? (
                                 <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>

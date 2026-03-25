@@ -7,7 +7,7 @@ import SkeletonCard from '../components/SkeletonCard';
 import nebulaImg from '../assets/WhatsApp Image 2026-03-15 at 14.34.26.jpeg';
 import marcaDaguaImg from "../assets/marca d'agua sulcos cosmicos.png";
 
-const GENRES = ['Todos', 'Eletrônica / Synth', 'Jazz / Soul', 'Rock Clássico', 'R&B / Indie Pop', 'World / Ambient'];
+const GENRES = ['Todos', 'Rock Clássico', 'Jazz / Soul', 'R&B / Indie Pop', 'Eletrônica / Synth', 'Hip-Hop', 'World / Ambient'];
 const RARITIES = ['Todas', 'Prensagem Limitada', '1ª Edição', 'Reedição', 'Comum'];
 const SORT_OPTIONS = [
   { value: 'default', label: 'Padrão' },
@@ -103,21 +103,7 @@ export default function Home() {
             <p className="text-cosmic-muted font-mono text-xs uppercase tracking-widest mb-4">
               ✦ Descubra o disco pelo sulco ✦
             </p>
-            <p className="text-cosmic-cream/80 text-lg max-w-xl mx-auto mb-8">
-              Não é só uma loja. É uma experiência de descoberta musical.
-              Vinis raros, edições limitadas e clássicos atemporais.
-            </p>
-            <motion.button
-              onClick={() => setShowHero(false)}
-              className="btn-primary inline-flex items-center gap-2 text-base px-8 py-3"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <span>Explorar Catálogo</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-              </svg>
-            </motion.button>
+            
           </motion.div>
         </section>
       )}

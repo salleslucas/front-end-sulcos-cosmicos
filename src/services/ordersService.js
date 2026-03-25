@@ -34,11 +34,11 @@ export async function submitOrder(cartItems) {
   const items = cartItems.map(item => ({
     productId: item.id,
     name: item.album,
-    price: +(item.price * 5.2).toFixed(2),
+    price: +item.price.toFixed(2),
   }));
 
   const total = cartItems.reduce(
-    (sum, item) => sum + +(item.price * 5.2).toFixed(2) * item.quantity,
+    (sum, item) => sum + item.price * item.quantity,
     0
   );
 

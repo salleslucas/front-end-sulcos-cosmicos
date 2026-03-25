@@ -77,7 +77,7 @@ export default function CartDrawer() {
                         <p className="text-cosmic-cream font-semibold text-sm truncate">{item.album}</p>
                         <p className="text-cosmic-muted text-xs truncate">{item.artist}</p>
                         <p className="text-cosmic-gold font-mono text-sm mt-1">
-                          R$ {(item.price * 5.2).toFixed(2)}
+                          R$ {item.price.toFixed(2)}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
@@ -113,7 +113,7 @@ export default function CartDrawer() {
                 <div className="flex justify-between items-center">
                   <span className="text-cosmic-muted">Total</span>
                   <span className="text-cosmic-gold font-mono font-bold text-xl">
-                    R$ {(totalPrice * 5.2).toFixed(2)}
+                    R$ {totalPrice.toFixed(2)}
                   </span>
                 </div>
                 <button onClick={handleCheckout} className="btn-primary w-full text-center">

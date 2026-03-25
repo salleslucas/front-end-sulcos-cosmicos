@@ -60,7 +60,7 @@ export default function DiscDetail() {
     );
   }
 
-  const priceInBRL = (disc.price * 5.2).toFixed(2);
+  const priceInBRL = disc.price.toFixed(2);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">

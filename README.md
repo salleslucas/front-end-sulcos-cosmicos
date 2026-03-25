@@ -1,124 +1,125 @@
-# 🎵 Sulco Cósmico — Loja de Vinil
+# Sulcos Cósmicos — Front-end
 
-> **"Descubra o disco pelo sulco"**
-
-Uma experiência de compra de discos de vinil com identidade visual artística e cósmica, construída com React + Vite. Consome dados de produtos da [Fake Store API](https://fakestoreapi.com) e os transforma em um catálogo de vinil com nomes de artistas, álbuns, gêneros musicais e raridade.
+Interface web desenvolvida com **React + Vite** para o e-commerce de vinis Sulcos Cósmicos, como parte do trabalho acadêmico da Pós-Graduação em Desenvolvimento Full Stack da **PUC-Rio** (Sprint 2).
 
 ---
 
-## 🌐 Arquitetura da Aplicação
+## Descrição do Projeto
 
-```mermaid
-flowchart TD
-    User([👤 Usuário])
+Este componente implementa a interface do usuário do sistema Sulcos Cósmicos, uma loja virtual de discos de vinil com identidade visual artística e temática espacial. O front-end consome dois serviços distintos: a **iTunes Search API** para o catálogo de álbuns e a **API REST** do back-end próprio (FastAPI) para o gerenciamento de pedidos.
 
-    subgraph Frontend["🖥️ Front-End — React + Vite (porta 3000)"]
-        direction TB
-        Home[📀 Home — Catálogo de Discos]
-        Detail[🎵 Detalhe do Disco]
-        CartPage[🛒 Carrinho / Checkout]
-        History[📋 Histórico de Pedidos]
-        CartCtx[(🗂️ CartContext)]
-        OrdersLS[(💾 localStorage — Pedidos)]
-    end
+A iTunes Search API é uma API pública da Apple, gratuita e sem necessidade de autenticação. Ela retorna dados reais de álbuns musicais com artista, título, capa e gênero, o que a torna adequada para o domínio de uma loja de vinis. A lógica de pedidos fica inteiramente no back-end, mantendo cada parte do sistema com uma responsabilidade bem definida.
 
-    subgraph ExternalAPI["🌐 Fake Store API"]
-        GET_ALL["GET /products"]
-        GET_ONE["GET /products/:id"]
-    end
+### Por que a iTunes Search API?
 
-    subgraph OrdersModule["📦 Módulo de Pedidos (localStorage)"]
-        POST_ORDER["POST — createOrder()"]
-        GET_ORDERS["GET — getOrders()"]
-        PUT_ORDER["PUT — updateOrderStatus()"]
-        DEL_ORDER["DELETE — deleteOrder()"]
-    end
+A FakeStore API foi substituída porque retorna produtos genéricos (eletrônicos, roupas, joias) que não têm nenhuma relação com uma loja de vinis. A iTunes Search API fornece dados reais do catálogo musical da Apple, com nome do artista, título do álbum, capa em alta resolução, gênero e ano de lançamento. Isso tornou o catálogo da loja coerente com o domínio do projeto.
 
-    User -->|navega| Home
-    User -->|clica no disco| Detail
-    User -->|adiciona ao carrinho| CartCtx
-    User -->|finaliza pedido| CartPage
-    User -->|visualiza histórico| History
+### Tecnologias utilizadas
 
-    Home -->|GET /products| GET_ALL
-    Detail -->|GET /products/:id| GET_ONE
-
-    CartPage -->|cria pedido| POST_ORDER
-    History -->|lista pedidos| GET_ORDERS
-    History -->|atualiza status| PUT_ORDER
-    History -->|exclui pedido| DEL_ORDER
-
-    POST_ORDER & GET_ORDERS & PUT_ORDER & DEL_ORDER --> OrdersLS
-
-    subgraph Docker["🐳 Docker"]
-        Nginx["nginx:alpine — serve /dist"]
-    end
-
-    Frontend --> Docker
-```
+| Tecnologia          | Versão  | Finalidade                                              |
+|---------------------|---------|----------------------------------------------------------|
+| **React**           | 18.3    | Biblioteca de construção de interfaces                  |
+| **Vite**            | 5.x     | Empacotador e servidor de desenvolvimento               |
+| **Tailwind CSS**    | 3.4     | Estilização utilitária                                  |
+| **Framer Motion**   | 11.x    | Animações declarativas em componentes React             |
+| **React Router DOM**| 6.x     | Roteamento client-side (SPA)                            |
+| **react-hot-toast** | 2.x     | Notificações de feedback ao usuário                     |
+| **Nginx**           | 1.27    | Servidor web para a build de produção no Docker         |
+| **Docker**          | —       | Conteinerização para execução reproduzível              |
 
 ---
 
-## ✨ Funcionalidades
+## Arquitetura
 
-| Feature | Descrição |
-|---|---|
-| 📀 Catálogo de Discos | Listagem com cards artísticos, covers, gênero, raridade e rating |
-| 🔍 Filtros | Por gênero musical, raridade, busca textual e ordenação (preço/rating) |
-| 📄 Paginação | 8 discos por página |
-| 🎵 Detalhe do Disco | Preview de "colocar na vitrola" com animação de disco girando |
-| 🛒 Carrinho | Drawer lateral animado, controle de quantidade, total |
-| ✅ Checkout | Formulário de entrega com simulação de pedido (POST) |
-| 📋 Histórico | Lista de pedidos com status, progress bar e expansão |
-| 🔄 Atualizar Status | PUT — muda status do pedido (Pendente → Processando → Enviado → Entregue) |
-| 🗑️ Excluir Pedido | DELETE — remove pedido do histórico |
-| 💀 Skeleton Loading | Cards placeholder durante carregamento |
-| 🎨 Animações | Framer Motion em todos os elementos interativos |
-| 🔔 Toasts | Feedback visual ao adicionar ao carrinho / confirmar pedido |
-
----
-
-## 🎸 Mapeamento Temático (Fake Store → Vinil)
-
-| Fake Store | Sulco Cósmico |
-|---|---|
-| `title` | Nome do álbum |
-| `category` | Gênero musical |
-| `image` | Capa do disco |
-| `price` | Preço em R$ (× 5.2) |
-| `rating.rate` | Raridade (Prensagem Limitada, 1ª Edição, etc.) |
-
----
-
-## 🗂️ Estrutura do Projeto
+O diagrama abaixo representa o fluxo de dados entre os componentes do sistema:
 
 ```
-sulco-cosmico/
+┌────────────────────────────────────────────────────────────────────┐
+│                     Front-End (React + Vite)                       │
+│                                                                    │
+│  src/                                                              │
+│  ├── pages/        Telas da aplicação (Home, Cart, etc.)          │
+│  ├── components/   Componentes reutilizáveis de UI                │
+│  ├── context/      Estado global do carrinho (React Context)      │
+│  ├── hooks/        Custom hooks (useOrders)                       │
+│  ├── services/     Camada de acesso às APIs                       │
+│  └── utils/        Transformação de dados (transform.js)          │
+└───────────────┬────────────────────────┬───────────────────────────┘
+                │                        │
+                ▼                        ▼
+  ┌─────────────────────┐   ┌────────────────────────────┐
+  │  iTunes Search API  │   │  API REST Sulcos Cósmicos  │
+  │  catálogo de vinis  │   │  FastAPI + SQLite           │
+  │  (API externa)      │   │  (back-end próprio)         │
+  └─────────────────────┘   └────────────────────────────┘
+```
+
+### Camada de serviços (`src/services/`)
+
+| Arquivo            | Responsabilidade                                               |
+|--------------------|----------------------------------------------------------------|
+| `storeApi.js`      | Consultas à iTunes Search API para o catálogo de álbuns       |
+| `ordersService.js` | Comunicação com o back-end para CRUD de pedidos               |
+| `api.js`           | Cliente HTTP base com tratamento centralizado de erros        |
+
+### Camada de transformação (`src/utils/transform.js`)
+
+Converte os objetos retornados pela iTunes API para o modelo interno da aplicação, isolando os componentes React do contrato específico da API externa. Também calcula o preço em BRL (a partir do valor em USD com margem de revenda) e define a raridade do disco com base no ano de lançamento do álbum.
+
+---
+
+## Funcionalidades
+
+| Funcionalidade       | Descrição                                                                  |
+|----------------------|----------------------------------------------------------------------------|
+| Catálogo de discos   | Listagem com capas reais, artista, gênero, raridade e avaliação           |
+| Filtros              | Por gênero musical, raridade, busca textual e ordenação por preço/avaliação|
+| Paginação            | 8 discos por página                                                        |
+| Detalhe do disco     | Animação de vitrola com informações completas do álbum                    |
+| Carrinho             | Drawer lateral animado com controle de quantidade e total                 |
+| Checkout             | Formulário de entrega com envio do pedido ao back-end via POST            |
+| Histórico de pedidos | Listagem com status, expansão de itens e opções de atualização/exclusão   |
+| Skeleton loading     | Cards placeholder durante o carregamento das requisições                  |
+| Animações            | Framer Motion em todos os elementos interativos                           |
+| Toasts               | Feedback visual ao adicionar ao carrinho e ao confirmar pedido            |
+
+---
+
+## Estrutura do Projeto
+
+```
+front-end-sulcos-cosmicos/
 ├── public/
 │   └── vinyl-icon.svg
 ├── src/
+│   ├── assets/              Imagens e logotipos da marca
 │   ├── components/
-│   │   ├── CartDrawer.jsx     # Drawer lateral do carrinho
-│   │   ├── DiscCard.jsx       # Card de disco com hover e animações
-│   │   ├── Navbar.jsx         # Barra de navegação
-│   │   ├── SkeletonCard.jsx   # Placeholder de loading
-│   │   └── VinylDisc.jsx      # Componente de disco animado
+│   │   ├── CartDrawer.jsx   Drawer lateral do carrinho
+│   │   ├── DiscCard.jsx     Card de disco com hover e animações
+│   │   ├── Feedback.jsx     Componente de feedback (erro/sucesso)
+│   │   ├── Navbar.jsx       Barra de navegação
+│   │   ├── SkeletonCard.jsx Placeholder de carregamento
+│   │   └── VinylDisc.jsx    Componente de disco animado
 │   ├── context/
-│   │   └── CartContext.jsx    # Estado global do carrinho
+│   │   └── CartContext.jsx  Estado global do carrinho (React Context API)
+│   ├── hooks/
+│   │   └── useOrders.js     Custom hook para gerenciamento de pedidos
 │   ├── pages/
-│   │   ├── Home.jsx           # Catálogo (GET produtos)
-│   │   ├── DiscDetail.jsx     # Detalhe do disco (GET produto)
-│   │   ├── Cart.jsx           # Checkout (POST pedido)
-│   │   └── OrderHistory.jsx   # Histórico (GET/PUT/DELETE pedido)
+│   │   ├── Home.jsx         Catálogo (GET álbuns via iTunes API)
+│   │   ├── DiscDetail.jsx   Detalhe do disco (GET álbum por ID)
+│   │   ├── Cart.jsx         Checkout (POST pedido ao back-end)
+│   │   └── OrderHistory.jsx Histórico (GET/PUT/DELETE pedidos no back-end)
 │   ├── services/
-│   │   ├── storeApi.js        # Chamadas à Fake Store API
-│   │   └── ordersService.js   # CRUD de pedidos (localStorage)
+│   │   ├── storeApi.js      Consultas à iTunes Search API
+│   │   ├── ordersService.js CRUD de pedidos via API REST
+│   │   └── api.js           Cliente HTTP base
 │   ├── utils/
-│   │   └── transform.js       # Transformação de dados → tema vinil
+│   │   └── transform.js     Transformação iTunes API para modelo interno
 │   ├── App.jsx
 │   ├── main.jsx
 │   └── index.css
 ├── Dockerfile
+├── Dockerfile.dev
 ├── docker-compose.yml
 ├── nginx.conf
 ├── vite.config.js
@@ -128,30 +129,28 @@ sulco-cosmico/
 
 ---
 
-## 🚀 Como Rodar Localmente
+## Pré-requisitos
 
-### Pré-requisitos
+- **Node.js** >= 22 e **npm** >= 10, ou
+- **Docker** e **Docker Compose** para execução conteinerizada
 
-- [Node.js](https://nodejs.org) >= 22
-- npm >= 10
+---
 
-### Instalação
+## Execução local (desenvolvimento)
 
 ```bash
-# Clone o repositório
-git clone https://github.com/salleslucas/front-end-sulcos-cosmicos.git
-cd front-end-sulcos-cosmicos
-
-# Instale as dependências
+# Instalar as dependências
 npm install
 
-# Inicie o servidor de desenvolvimento
+# Iniciar o servidor de desenvolvimento
 npm run dev
 ```
 
 Acesse em: **http://localhost:5173**
 
-### Build de produção
+---
+
+## Build de produção
 
 ```bash
 npm run build
@@ -160,69 +159,31 @@ npm run preview
 
 ---
 
-## 🐳 Como Rodar com Docker
-
-### Usando docker-compose (recomendado)
+## Execução com Docker (recomendado)
 
 ```bash
-# Build e inicia o container
-docker-compose up --build
+# Constrói a imagem e sobe o container
+docker compose up --build
 
 # Em segundo plano
-docker-compose up --build -d
+docker compose up --build -d
+
+# Encerrar o container
+docker compose down
 ```
 
 Acesse em: **http://localhost:3000**
 
-### Parar os containers
+---
 
-```bash
-docker-compose down
-```
+## Integração com a API externa (iTunes Search API)
 
-### Usando Docker diretamente
+O arquivo `src/services/storeApi.js` centraliza todas as chamadas à iTunes Search API. Os termos de busca são predefinidos com artistas como Pink Floyd, David Bowie e Miles Davis, e as consultas são feitas em paralelo via `Promise.all`. Os resultados são deduplicados por `collectionId` antes de compor o catálogo final da loja.
 
-```bash
-# Build da imagem
-docker build -t sulco-cosmico .
-
-# Rodar o container
-docker run -p 3000:80 sulco-cosmico
-```
+O arquivo `src/utils/transform.js` converte os campos retornados pela API (`collectionId`, `artistName`, `collectionName`, `artworkUrl100`, `primaryGenreName`, `releaseDate`) para o modelo interno utilizado pelos componentes React, com o mapeamento de gêneros e o cálculo de preço e raridade.
 
 ---
 
-## 🌐 Rotas HTTP Implementadas
+## Autor
 
-| Método | Origem | Uso |
-|---|---|---|
-| `GET` | Fake Store API | Listar todos os discos do catálogo |
-| `GET` | Fake Store API | Buscar detalhe de um disco por ID |
-| `POST` | localStorage (módulo interno) | Criar novo pedido no checkout |
-| `PUT` | localStorage (módulo interno) | Atualizar status do pedido |
-| `DELETE` | localStorage (módulo interno) | Excluir pedido do histórico |
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-| Tecnologia | Versão | Uso |
-|---|---|---|
-| React | 18.3 | Framework de UI |
-| Vite | 5.x | Bundler e dev server |
-| Tailwind CSS | 3.4 | Estilização utilitária |
-| Framer Motion | 11.x | Animações |
-| React Router DOM | 6.x | Roteamento SPA |
-| react-hot-toast | 2.x | Notificações |
-| Nginx | 1.27 | Servidor web (Docker) |
-| Docker | — | Containerização |
-
----
-
-## 👨‍💻 Autor
-
-**Lucas Salles** — PUC-Rio Pós-Graduação, Sprint 2
-
----
-
-*Sulco Cósmico — onde cada disco conta uma história do universo* 🌌
+**Lucas Salles** — PUC-Rio, Pós-Graduação em Desenvolvimento Full Stack, Sprint 2

@@ -2,39 +2,33 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
-import { submitOrder } from '../services/ordersService';
+import { useOrders } from '../hooks/useOrders';
 import VinylDisc from '../components/VinylDisc';
+import Feedback from '../components/Feedback';
 import toast from 'react-hot-toast';
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
-  const [checkingOut, setCheckingOut] = useState(false);
-  const [error, setError] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', address: '' });
+
+  // Hook reutilizável — encapsula estado e chamadas ao back-end FastAPI
+  const { isCreating, error, success, handleCreateOrder } = useOrders();
 
   // POST /orders — envia pedido ao back-end FastAPI
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (items.length === 0) return;
 
-    setCheckingOut(true);
-    setError(null);
-
-    try {
-      const order = await submitOrder(items);
+    await handleCreateOrder(items, (order) => {
+      // Callback executado apenas em caso de sucesso
       clearCart();
       toast.success(`Pedido #${order.id} confirmado! 🎶`, { duration: 4000 });
       navigate('/historico');
-    } catch (err) {
-      setError(err.message || 'Falha ao conectar com o servidor. Tente novamente.');
-      toast.error('Erro ao criar pedido. Verifique se o servidor está rodando.');
-    } finally {
-      setCheckingOut(false);
-    }
+    });
   };
 
-  if (items.length === 0 && !checkingOut) {
+  if (items.length === 0 && !isCreating) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center">
         <motion.div
@@ -98,7 +92,7 @@ export default function Cart() {
 
                 <div className="flex flex-col items-end gap-2 flex-shrink-0">
                   <p className="text-cosmic-gold font-mono font-bold">
-                    R$ {(item.price * 5.2 * item.quantity).toFixed(2)}
+                    R$ {(item.price * item.quantity).toFixed(2)}
                   </p>
                   <div className="flex items-center gap-2 bg-cosmic-black rounded-xl border border-white/10 px-1.5">
                     <button
@@ -165,21 +159,14 @@ export default function Cart() {
                 />
               </div>
 
-              {/* Erro de API */}
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-sm text-red-400 flex items-start gap-2">
-                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  {error}
-                </div>
-              )}
+              {/* Feedback de erro / sucesso via hook */}
+              <Feedback error={error} success={success} />
 
               {/* Resumo */}
               <div className="border-t border-white/5 pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-cosmic-muted">Subtotal</span>
-                  <span className="text-cosmic-cream font-mono">R$ {(totalPrice * 5.2).toFixed(2)}</span>
+                  <span className="text-cosmic-cream font-mono">R$ {totalPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-cosmic-muted">Frete</span>
@@ -187,17 +174,17 @@ export default function Cart() {
                 </div>
                 <div className="flex justify-between font-bold">
                   <span className="text-cosmic-cream">Total</span>
-                  <span className="text-cosmic-gold font-mono text-lg">R$ {(totalPrice * 5.2).toFixed(2)}</span>
+                  <span className="text-cosmic-gold font-mono text-lg">R$ {totalPrice.toFixed(2)}</span>
                 </div>
               </div>
 
               <motion.button
                 type="submit"
-                disabled={checkingOut}
+                disabled={isCreating}
                 className="btn-primary w-full flex items-center justify-center gap-3"
                 whileTap={{ scale: 0.97 }}
               >
-                {checkingOut ? (
+                {isCreating ? (
                   <>
                     <VinylDisc size={20} spinning />
                     Processando...

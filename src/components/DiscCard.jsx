@@ -73,7 +73,7 @@ export default function DiscCard({ disc }) {
         {/* Preço e botão */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-cosmic-gold font-mono font-bold text-lg">
-            R$ {(disc.price * 5.2).toFixed(2)}
+            R$ {disc.price.toFixed(2)}
           </span>
           <motion.button
             onClick={() => addItem(disc)}
