@@ -36,13 +36,6 @@ export default function DiscCard({ disc }) {
           />
           {/* Overlay com efeito de vinil */}
           <div className="absolute inset-0 bg-gradient-to-t from-cosmic-card via-transparent to-transparent opacity-60" />
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="bg-black/50 rounded-full p-3 backdrop-blur-sm">
-              <svg className="w-8 h-8 text-cosmic-gold" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </div>
-          </div>
         </div>
       </Link>
 

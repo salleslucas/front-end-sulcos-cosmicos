@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { fetchProduct } from '../services/storeApi';
 import { transformProduct } from '../utils/transform';
 import { useCart } from '../context/CartContext';
-import VinylDisc from '../components/VinylDisc';
 import SkeletonCard from '../components/SkeletonCard';
 
 const RARITY_COLORS = {
@@ -20,7 +19,6 @@ export default function DiscDetail() {
   const [disc, setDisc] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [playing, setPlaying] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
@@ -81,7 +79,7 @@ export default function DiscDetail() {
         >
           {/* Capa */}
           <div className="relative w-full max-w-sm">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-cosmic-dark border border-white/5 relative group">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-cosmic-dark border border-white/5">
               <img
                 src={disc.cover}
                 alt={disc.album}
@@ -89,54 +87,7 @@ export default function DiscDetail() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-cosmic-black/60 to-transparent" />
             </div>
-
-            {/* Disco girando atrás da capa quando "playing" */}
-            <motion.div
-              className="absolute -right-8 top-1/2 -translate-y-1/2 z-0"
-              animate={{ x: playing ? 0 : -20, opacity: playing ? 1 : 0.3 }}
-              transition={{ duration: 0.5 }}
-            >
-              <VinylDisc size={180} spinning={playing} />
-            </motion.div>
           </div>
-
-          {/* Botão de preview */}
-          <motion.button
-            onClick={() => setPlaying(!playing)}
-            className={`flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all ${
-              playing
-                ? 'bg-cosmic-purple border-cosmic-purple text-white'
-                : 'border-cosmic-purple/40 text-cosmic-purple hover:bg-cosmic-purple/10'
-            }`}
-            whileTap={{ scale: 0.95 }}
-          >
-            {playing ? (
-              <>
-                <motion.div
-                  className="flex gap-0.5 items-end h-5"
-                  animate={{ scaleY: [1, 1.5, 0.8, 1.3, 1] }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
-                >
-                  {[1,2,3,4].map(b => (
-                    <motion.div
-                      key={b}
-                      className="w-1 bg-white rounded-full"
-                      animate={{ height: ['8px', `${12 + b * 4}px`, '6px', `${14 + b * 2}px`, '8px'] }}
-                      transition={{ duration: 0.6 + b * 0.1, repeat: Infinity }}
-                    />
-                  ))}
-                </motion.div>
-                Tocando...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                Colocar na Vitrola
-              </>
-            )}
-          </motion.button>
         </motion.div>
 
         {/* Lado direito — info */}
