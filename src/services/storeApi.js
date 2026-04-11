@@ -39,7 +39,11 @@ const SEARCH_TERMS = [
 const LIMIT = 4;
 
 // URL base da iTunes Search API
-const ITUNES_BASE = 'https://itunes.apple.com/search';
+// Em desenvolvimento o Vite proxy redireciona /itunes → https://itunes.apple.com
+// Em produção (Nginx) o proxy também é configurado via nginx.conf
+const ITUNES_BASE = import.meta.env.DEV
+  ? '/itunes/search'
+  : '/itunes/search';
 
 /**
  * Busca álbuns de um artista/termo na iTunes Search API.
@@ -104,7 +108,7 @@ export async function fetchProduct(id) {
     entity: 'album',
   });
 
-  const res = await fetch(`https://itunes.apple.com/lookup?${params}`);
+  const res = await fetch(`/itunes/lookup?${params}`);
   if (!res.ok) throw new Error('Álbum não encontrado');
 
   const json = await res.json();
